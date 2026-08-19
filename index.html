@@ -7,14 +7,19 @@
     <!-- Tailwind CSS (デザイン用) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background-color: #f3f4f6; color: #1f2937; }
+        body { background-color: #f3f4f6; color: #1f2937; font-family: 'Helvetica Neue', Arial, sans-serif; }
         .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px; }
         .input-group { margin-bottom: 10px; }
         label { display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 4px; color: #4b5563; }
-        input, select { width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 1rem; }
-        button { width: 100%; padding: 12px; background-color: #2563eb; color: white; font-weight: bold; border-radius: 6px; cursor: pointer; transition: 0.2s; }
+        input, select { width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 1rem; box-sizing: border-box; }
+        input:focus, select:focus { outline: none; border-color: #2563eb; ring: 2px solid #93c5fd; }
+        button { width: 100%; padding: 12px; background-color: #2563eb; color: white; font-weight: bold; border-radius: 6px; cursor: pointer; transition: 0.2s; margin-top: 10px; }
         button:hover { background-color: #1d4ed8; }
         .result-box { background-color: #ecfdf5; border: 1px solid #10b981; color: #065f46; }
+        .stat-row { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #e5e7eb; }
+        .stat-row:last-child { border-bottom: none; }
+        .stat-label { font-weight: bold; }
+        .stat-value { font-family: monospace; font-size: 1.1em; }
     </style>
 </head>
 <body class="p-4 md:p-8">
@@ -28,12 +33,13 @@
             <div class="grid grid-cols-2 gap-4">
                 <div class="input-group">
                     <label>騎士団レベル</label>
-                    <input type="number" id="knightLevel" value="1">
+                    <input type="number" id="knightLevel" value="1" min="1">
                 </div>
                 <div class="input-group">
                     <label>転生回数</label>
-                    <input type="number" id="rebirthCount" value="0">
+                    <input type="number" id="rebirthCount" value="0" min="0">
                 </div>
+                <!-- 計算対象のステータス -->
                 <div class="input-group">
                     <label>最大HP</label>
                     <input type="number" id="maxHp" value="1000">
@@ -82,7 +88,6 @@
                     <select id="armorType">
                         <option value="null">なし (Null)</option>
                         <option value="unease">ぼんやりとした不安</option>
-                        <!-- 必要に応じて他の防具を追加 -->
                     </select>
                 </div>
                 <div class="input-group">
@@ -104,7 +109,6 @@
                         <option value="null">なし (Null)</option>
                         <option value="weak_pendant">弱者のペンダント</option>
                         <option value="blue_storm">青嵐</option>
-                        <!-- 必要に応じて他の装身具を追加 -->
                     </select>
                 </div>
                 <div class="input-group">
@@ -122,7 +126,7 @@
         <!-- 結果表示 -->
         <div id="resultArea" class="card result-box mt-6 hidden">
             <h2 class="text-lg font-bold mb-2">計算結果</h2>
-            <div id="resultContent" class="text-sm space-y-1">
+            <div id="resultContent" class="text-sm">
                 <!-- ここに結果が入ります -->
             </div>
         </div>
@@ -142,20 +146,27 @@
             }
         };
 
+        // カンマ区切り用の関数
+        function formatNumber(num) {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
+
         function calculateStats() {
             // 1. 入力値の取得
             const inputs = {
                 knightLevel: parseInt(document.getElementById('knightLevel').value) || 0,
                 rebirthCount: parseInt(document.getElementById('rebirthCount').value) || 0,
-                maxHp: parseInt(document.getElementById('maxHp').value) || 0,
-                str: parseInt(document.getElementById('str').value) || 0,
-                int: parseInt(document.getElementById('int').value) || 0,
-                vitality: parseInt(document.getElementById('vitality').value) || 0,
-                dexterity: parseInt(document.getElementById('dexterity').value) || 0,
-                speed: parseInt(document.getElementById('speed').value) || 0,
-                charm: parseInt(document.getElementById('charm').value) || 0,
-                magic: parseInt(document.getElementById('magic').value) || 0,
-                luck: parseInt(document.getElementById('luck').value) || 0,
+                
+                // 計算対象ステータス
+                maxHp: parseFloat(document.getElementById('maxHp').value) || 0,
+                str: parseFloat(document.getElementById('str').value) || 0,
+                int: parseFloat(document.getElementById('int').value) || 0,
+                vitality: parseFloat(document.getElementById('vitality').value) || 0,
+                dexterity: parseFloat(document.getElementById('dexterity').value) || 0,
+                speed: parseFloat(document.getElementById('speed').value) || 0,
+                charm: parseFloat(document.getElementById('charm').value) || 0,
+                magic: parseFloat(document.getElementById('magic').value) || 0,
+                luck: parseFloat(document.getElementById('luck').value) || 0,
                 
                 armorType: document.getElementById('armorType').value,
                 armorEnhance: parseInt(document.getElementById('armorEnhance').value),
@@ -164,63 +175,69 @@
                 accEnhance: parseInt(document.getElementById('accessoryEnhance').value)
             };
 
-            // ---------------------------------------------------------
-            // 【ここを編集】 実際のゲームの計算ロジックを書きます
-            // ---------------------------------------------------------
-            
-            // 例：基本的なステータスに装備ボーナスを加算するだけのサンプルロジック
-            // ※ゲーム固有の数値（例：腕力1=攻撃力2など）に合わせて修正してください
-            
-            let finalHp = inputs.maxHp;
-            let finalAtk = inputs.str * 2; // 例：腕力の2倍が攻撃力
-            let finalDef = inputs.vitality * 1.5; // 例：生命力の1.5倍が防御力
-            let finalMDef = inputs.int * 1.5; // 例：知能の1.5倍が魔法防御
+            // 計算対象のステータスリスト
+            const stats = [
+                { key: 'maxHp', label: '最大HP' },
+                { key: 'str', label: '腕力' },
+                { key: 'int', label: '知能' },
+                { key: 'vitality', label: '生命力' },
+                { key: 'dexterity', label: '器用さ' },
+                { key: 'speed', label: '速さ' },
+                { key: 'charm', label: '魅力' },
+                { key: 'magic', label: '魔力' },
+                { key: 'luck', label: '運' }
+            ];
 
-            // 防具によるボーナス計算（サンプル）
-            if (inputs.armorType !== 'null') {
+            let resultHtml = '';
+
+            // 各ステータスに対して計算を実行
+            stats.forEach(stat => {
+                let baseValue = inputs[stat.key];
+                let multiplier = 1.0;
+
+                // 1. 騎士団レベルボーナス: レベル1につき+2%
+                // 式: 1 + (レベル * 0.02)
+                multiplier *= (1 + (inputs.knightLevel * 0.02));
+
+                // 2. 防具: "ぼんやりとした不安"の場合
+                // 式: (1 + x) / (3 + x) ※ステータス減少なのでこの値を掛ける
                 if (inputs.armorType === 'unease') {
-                    // 「ぼんやりとした不安」の仮効果：防御力+10、強化ごとに+1
-                    finalDef += 10 + (inputs.armorEnhance * 1);
+                    const x = inputs.armorEnhance;
+                    const penalty = (1 + x) / (3 + x);
+                    multiplier *= penalty;
                 }
-            }
 
-            // 装身具によるボーナス計算（サンプル）
-            if (inputs.accType !== 'null') {
+                // 3. 装身具: "青嵐"の場合
+                // 式: (1 + x) / (3 + x)
+                if (inputs.accType === 'blue_storm') {
+                    const x = inputs.accEnhance;
+                    const penalty = (1 + x) / (3 + x);
+                    multiplier *= penalty;
+                }
+
+                // 4. 装身具: "弱者のペンダント"の場合
+                // 式: (1 + 0.1x) * (1 + 0.1n)
                 if (inputs.accType === 'weak_pendant') {
-                    // 「弱者のペンダント」の仮効果：HP+50
-                    finalHp += 50;
-                } else if (inputs.accType === 'blue_storm') {
-                    // 「青嵐」の仮効果：速度+5
-                    inputs.speed += 5; // 速度自体の変更
+                    const x = inputs.accEnhance;
+                    const n = inputs.rebirthCount;
+                    const bonus = (1 + 0.1 * x) * (1 + 0.1 * n);
+                    multiplier *= bonus;
                 }
-            }
 
-            // 転生によるボーナス（サンプル：転生1回ごとに全ステータスに1%ボーナスなど）
-            const rebirthBonus = 1 + (inputs.rebirthCount * 0.01);
-            finalHp *= rebirthBonus;
-            finalAtk *= rebirthBonus;
+                // 最終値の算出 (小数点以下切り捨て)
+                let finalValue = Math.floor(baseValue * multiplier);
+                
+                // 結果HTMLの生成
+                resultHtml += `
+                    <div class="stat-row">
+                        <span class="stat-label">${stat.label}</span>
+                        <span class="stat-value">${formatNumber(finalValue)}</span>
+                    </div>
+                `;
+            });
 
-            // 小数点以下切り捨て
-            finalHp = Math.floor(finalHp);
-            finalAtk = Math.floor(finalAtk);
-            finalDef = Math.floor(finalDef);
-            finalMDef = Math.floor(finalMDef);
-
-            // ---------------------------------------------------------
-            // 結果の表示
-            // ---------------------------------------------------------
-            const resultContent = document.getElementById('resultContent');
-            resultContent.innerHTML = `
-                <p><strong>騎士団レベル:</strong> ${inputs.knightLevel} (転生: ${inputs.rebirthCount})</p>
-                <hr class="my-2 border-gray-300">
-                <p><strong>最終HP:</strong> ${finalHp}</p>
-                <p><strong>最終攻撃力:</strong> ${finalAtk}</p>
-                <p><strong>最終防御力:</strong> ${finalDef}</p>
-                <p><strong>最終魔法防御:</strong> ${finalMDef}</p>
-                <p><strong>速度:</strong> ${inputs.speed}</p>
-                <p class="text-xs text-gray-500 mt-2">※計算式はサンプルです。実際のゲームの数値に合わせてJSを編集してください。</p>
-            `;
-
+            // 結果表示エリアに挿入
+            document.getElementById('resultContent').innerHTML = resultHtml;
             document.getElementById('resultArea').classList.remove('hidden');
         }
     </script>
