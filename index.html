@@ -40,20 +40,20 @@
                 <label class="mb-2">ステータス一括貼り付け</label>
                 <textarea id="pasteArea" placeholder="ここにステータスログを貼り付けてください&#10;例: 最大HP: 4,854,659&#10;腕力: 2,390,873"></textarea>
                 <button class="btn-secondary" onclick="applyPaste()">貼り付けを適用する</button>
-                <p class="text-xs text-gray-500 mt-2">※カンマ区切りや「:」の有無を自動検出します。検出できない場合はその項目のみ更新されません。</p>
+                <p class="text-xs text-gray-500 mt-2">※貼り付け後、自動的に計算されます。</p>
             </div>
 
             <div class="grid grid-cols-2 gap-4">
                 <!-- 選択式に変更 -->
                 <div class="input-group">
                     <label>騎士団レベル</label>
-                    <select id="knightLevel">
+                    <select id="knightLevel" class="auto-update-trigger">
                         <!-- JSで生成 -->
                     </select>
                 </div>
                 <div class="input-group">
                     <label>転生回数</label>
-                    <select id="rebirthCount">
+                    <select id="rebirthCount" class="auto-update-trigger">
                         <!-- JSで生成 -->
                     </select>
                 </div>
@@ -61,52 +61,53 @@
                 <!-- 計算対象のステータス -->
                 <div class="input-group">
                     <label>最大HP</label>
-                    <input type="number" id="maxHp" value="1000">
+                    <input type="number" id="maxHp" value="1000" class="auto-update-trigger">
                 </div>
                 <div class="input-group">
                     <label>腕力</label>
-                    <input type="number" id="str" value="10">
+                    <input type="number" id="str" value="10" class="auto-update-trigger">
                 </div>
                 <div class="input-group">
                     <label>知能</label>
-                    <input type="number" id="int" value="10">
+                    <input type="number" id="int" value="10" class="auto-update-trigger">
                 </div>
                 <div class="input-group">
                     <label>生命力</label>
-                    <input type="number" id="vitality" value="10">
+                    <input type="number" id="vitality" value="10" class="auto-update-trigger">
                 </div>
                 <div class="input-group">
                     <label>器用さ</label>
-                    <input type="number" id="dexterity" value="10">
+                    <input type="number" id="dexterity" value="10" class="auto-update-trigger">
                 </div>
                 <div class="input-group">
                     <label>速さ</label>
-                    <input type="number" id="speed" value="10">
+                    <input type="number" id="speed" value="10" class="auto-update-trigger">
                 </div>
                 <div class="input-group">
                     <label>魅力</label>
-                    <input type="number" id="charm" value="10">
+                    <input type="number" id="charm" value="10" class="auto-update-trigger">
                 </div>
                 <div class="input-group">
                     <label>魔力</label>
-                    <input type="number" id="magic" value="10">
+                    <input type="number" id="magic" value="10" class="auto-update-trigger">
                 </div>
                 <div class="input-group">
                     <label>運</label>
-                    <input type="number" id="luck" value="10">
+                    <input type="number" id="luck" value="10" class="auto-update-trigger">
                 </div>
             </div>
         </div>
 
         <!-- 2. 腎臓の状態 -->
-        <div class="card">
+        <div class="card border-l-4 border-yellow-500">
             <h2 class="text-lg font-bold mb-4 border-b pb-2">2. 腎臓の状態</h2>
             <div class="input-group">
                 <label>状態を選択</label>
-                <select id="kidneyStatus">
-                    <option value="healthy">健康</option>
-                    <option value="sold">売却済み</option>
+                <select id="kidneyStatus" class="auto-update-trigger">
+                    <option value="healthy">健康 (変化なし)</option>
+                    <option value="sold">売却済み (-50%)</option>
                 </select>
+                <div id="kidneyWarning" class="warning-text hidden">※売却済みの場合、全ステータスが50%になります。</div>
             </div>
         </div>
 
@@ -116,14 +117,14 @@
             <div class="grid grid-cols-2 gap-4">
                 <div class="input-group">
                     <label>防具の種類</label>
-                    <select id="armorType">
+                    <select id="armorType" class="auto-update-trigger">
                         <option value="null">なし (Null)</option>
                         <option value="unease">ぼんやりとした不安</option>
                     </select>
                 </div>
                 <div class="input-group">
                     <label>強化レベル</label>
-                    <select id="armorEnhance">
+                    <select id="armorEnhance" class="auto-update-trigger">
                         <!-- JavaScriptで0~16を自動生成 -->
                     </select>
                 </div>
@@ -136,7 +137,7 @@
             <div class="grid grid-cols-2 gap-4">
                 <div class="input-group">
                     <label>装身具の種類</label>
-                    <select id="accessoryType">
+                    <select id="accessoryType" class="auto-update-trigger">
                         <option value="null">なし (Null)</option>
                         <option value="weak_pendant">弱者のペンダント</option>
                         <option value="blue_storm">青嵐</option>
@@ -144,15 +145,15 @@
                 </div>
                 <div class="input-group">
                     <label>強化レベル</label>
-                    <select id="accessoryEnhance">
+                    <select id="accessoryEnhance" class="auto-update-trigger">
                         <!-- JavaScriptで0~16を自動生成 -->
                     </select>
                 </div>
             </div>
         </div>
 
-        <!-- 計算ボタン -->
-        <button onclick="calculateStats()">ステータスを計算する</button>
+        <!-- 計算ボタン (手動で再計算したい場合用) -->
+        <button onclick="calculateStats()">ステータスを再計算する</button>
 
         <!-- 結果表示 -->
         <div id="resultArea" class="card result-box mt-6 hidden">
@@ -206,6 +207,22 @@
                     warning.classList.add('hidden');
                 }
             });
+
+            // --- 自動更新設定 ---
+            // クラス "auto-update-trigger" を持つすべての要素を取得
+            const triggers = document.querySelectorAll('.auto-update-trigger');
+            
+            // 数値入力欄 (input) には 'input' イベントを、選択式 (select) には 'change' イベントをバインド
+            triggers.forEach(el => {
+                if (el.tagName === 'INPUT') {
+                    el.addEventListener('input', calculateStats);
+                } else {
+                    el.addEventListener('change', calculateStats);
+                }
+            });
+
+            // 初期計算実行
+            calculateStats();
         };
 
         // 貼り付け処理関数
@@ -213,10 +230,6 @@
             const text = document.getElementById('pasteArea').value;
             if (!text) return;
 
-            // 正規表現で項目ごとのデータを抽出
-            // 例: "最大HP: 4,854,659" -> ["最大HP", "4,854,659"]
-            // カンマ区切りや半角スペース、全角スペースを許容
-            
             const mappings = {
                 '最大HP': 'maxHp',
                 '腕力': 'str',
@@ -229,39 +242,27 @@
                 '運': 'luck'
             };
 
-            // テキストを改行で分割
             const lines = text.split('\n');
 
             lines.forEach(line => {
-                // 各行から「ラベル」:「数値」の形式を検索
-                // ラベルは日本語、数値は数字とカンマの組み合わせ
-                // 正規表現: ^(.*?)[:：]?\s*(\d[\d,]*)
                 const match = line.match(/^(.*?)[:：]?\s*(\d[\d,]*)/);
                 
                 if (match) {
-                    const label = match[1].trim(); // "最大HP" など
-                    const rawValue = match[2];    // "4,854,659" など
-
-                    // ラベルがマッピング対象か確認
+                    const label = match[1].trim();
+                    const rawValue = match[2];
                     const inputId = mappings[label];
                     
                     if (inputId) {
-                        // カンマを削除して数値に変換
                         const cleanValue = rawValue.replace(/,/g, '');
-                        
-                        // 入力欄に設定
                         const inputEl = document.getElementById(inputId);
                         if (inputEl) {
                             inputEl.value = cleanValue;
+                            // 値を書き換えた後、イベントを発生させて計算を更新
+                            inputEl.dispatchEvent(new Event('input'));
                         }
                     }
                 }
             });
-            
-            // 貼り付け後、自動的に計算するかどうかは好みですが、
-            // ここではユーザーが「計算する」ボタンを押すまで待つ設計にします。
-            // もし自動計算させたい場合は、以下をコメントアウト解除してください。
-            // calculateStats();
         }
 
         // カンマ区切り用の関数
