@@ -1,0 +1,2 @@
+# majinsim
+status sim
