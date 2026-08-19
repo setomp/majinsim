@@ -11,16 +11,19 @@
         .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px; }
         .input-group { margin-bottom: 10px; }
         label { display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 4px; color: #4b5563; }
-        input, select { width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 1rem; box-sizing: border-box; }
-        input:focus, select:focus { outline: none; border-color: #2563eb; ring: 2px solid #93c5fd; }
+        input, select, textarea { width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 1rem; box-sizing: border-box; }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: #2563eb; ring: 2px solid #93c5fd; }
         button { width: 100%; padding: 12px; background-color: #2563eb; color: white; font-weight: bold; border-radius: 6px; cursor: pointer; transition: 0.2s; margin-top: 10px; }
         button:hover { background-color: #1d4ed8; }
+        .btn-secondary { background-color: #6b7280; margin-top: 5px; }
+        .btn-secondary:hover { background-color: #4b5563; }
         .result-box { background-color: #ecfdf5; border: 1px solid #10b981; color: #065f46; }
         .stat-row { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #e5e7eb; }
         .stat-row:last-child { border-bottom: none; }
         .stat-label { font-weight: bold; }
         .stat-value { font-family: monospace; font-size: 1.1em; }
         .warning-text { color: #dc2626; font-size: 0.8rem; margin-top: 4px; }
+        textarea { height: 150px; font-family: monospace; }
     </style>
 </head>
 <body class="p-4 md:p-8">
@@ -31,19 +34,34 @@
         <!-- 1. ベースステータス入力 -->
         <div class="card">
             <h2 class="text-lg font-bold mb-4 border-b pb-2">1. ベースステータス</h2>
+            
+            <!-- 一括貼り付けエリア -->
+            <div class="mb-6 bg-gray-50 p-4 rounded border border-gray-200">
+                <label class="mb-2">ステータス一括貼り付け</label>
+                <textarea id="pasteArea" placeholder="ここにステータスログを貼り付けてください&#10;例: 最大HP: 4,854,659&#10;腕力: 2,390,873"></textarea>
+                <button class="btn-secondary" onclick="applyPaste()">貼り付けを適用する</button>
+                <p class="text-xs text-gray-500 mt-2">※カンマ区切りや「:」の有無を自動検出します。検出できない場合はその項目のみ更新されません。</p>
+            </div>
+
             <div class="grid grid-cols-2 gap-4">
+                <!-- 選択式に変更 -->
                 <div class="input-group">
                     <label>騎士団レベル</label>
-                    <input type="number" id="knightLevel" value="19" min="1">
+                    <select id="knightLevel">
+                        <!-- JSで生成 -->
+                    </select>
                 </div>
                 <div class="input-group">
                     <label>転生回数</label>
-                    <input type="number" id="rebirthCount" value="0" min="0">
+                    <select id="rebirthCount">
+                        <!-- JSで生成 -->
+                    </select>
                 </div>
+                
                 <!-- 計算対象のステータス -->
                 <div class="input-group">
                     <label>最大HP</label>
-                    <input type="number" id="maxHp" value="4854659">
+                    <input type="number" id="maxHp" value="1000">
                 </div>
                 <div class="input-group">
                     <label>腕力</label>
@@ -80,16 +98,15 @@
             </div>
         </div>
 
-        <!-- 2. 腎臓の状態 (新規追加) -->
-        <div class="card border-l-4 border-yellow-500">
+        <!-- 2. 腎臓の状態 -->
+        <div class="card">
             <h2 class="text-lg font-bold mb-4 border-b pb-2">2. 腎臓の状態</h2>
             <div class="input-group">
                 <label>状態を選択</label>
                 <select id="kidneyStatus">
-                    <option value="healthy">健康 (変化なし)</option>
-                    <option value="sold">売却済み (-50%)</option>
+                    <option value="healthy">健康</option>
+                    <option value="sold">売却済み</option>
                 </select>
-                <div id="kidneyWarning" class="warning-text hidden">※売却済みの場合、全ステータスが50%になります。</div>
             </div>
         </div>
 
@@ -101,7 +118,7 @@
                     <label>防具の種類</label>
                     <select id="armorType">
                         <option value="null">なし (Null)</option>
-                        <option value="unease" selected>ぼんやりとした不安</option>
+                        <option value="unease">ぼんやりとした不安</option>
                     </select>
                 </div>
                 <div class="input-group">
@@ -122,7 +139,7 @@
                     <select id="accessoryType">
                         <option value="null">なし (Null)</option>
                         <option value="weak_pendant">弱者のペンダント</option>
-                        <option value="blue_storm" selected>青嵐</option>
+                        <option value="blue_storm">青嵐</option>
                     </select>
                 </div>
                 <div class="input-group">
@@ -147,11 +164,27 @@
     </div>
 
     <script>
-        // ページ読み込み時に強化レベルのオプション(0-16)を生成
+        // 初期化処理
         window.onload = function() {
+            // 騎士団レベル (1-100)
+            const knightLevelSelect = document.getElementById('knightLevel');
+            for (let i = 1; i <= 100; i++) {
+                let opt = new Option(`レベル ${i}`, i);
+                knightLevelSelect.add(opt);
+            }
+            knightLevelSelect.value = 19; // デフォルト値
+
+            // 転生回数 (0-50)
+            const rebirthSelect = document.getElementById('rebirthCount');
+            for (let i = 0; i <= 50; i++) {
+                let opt = new Option(`${i}回`, i);
+                rebirthSelect.add(opt);
+            }
+            rebirthSelect.value = 0; // デフォルト値
+
+            // 強化レベル (0-16)
             const armorEnhanceSelect = document.getElementById('armorEnhance');
             const accEnhanceSelect = document.getElementById('accessoryEnhance');
-            
             for (let i = 0; i <= 16; i++) {
                 let option1 = new Option(`+${i}`, i);
                 let option2 = new Option(`+${i}`, i);
@@ -159,7 +192,7 @@
                 accEnhanceSelect.add(option2);
             }
             
-            // デフォルト値を設定（テスト用）
+            // デフォルト値設定
             document.getElementById('armorEnhance').value = 2;
             document.getElementById('accessoryEnhance').value = 3;
 
@@ -174,6 +207,62 @@
                 }
             });
         };
+
+        // 貼り付け処理関数
+        function applyPaste() {
+            const text = document.getElementById('pasteArea').value;
+            if (!text) return;
+
+            // 正規表現で項目ごとのデータを抽出
+            // 例: "最大HP: 4,854,659" -> ["最大HP", "4,854,659"]
+            // カンマ区切りや半角スペース、全角スペースを許容
+            
+            const mappings = {
+                '最大HP': 'maxHp',
+                '腕力': 'str',
+                '知能': 'int',
+                '生命力': 'vitality',
+                '器用さ': 'dexterity',
+                '速さ': 'speed',
+                '魅力': 'charm',
+                '魔力': 'magic',
+                '運': 'luck'
+            };
+
+            // テキストを改行で分割
+            const lines = text.split('\n');
+
+            lines.forEach(line => {
+                // 各行から「ラベル」:「数値」の形式を検索
+                // ラベルは日本語、数値は数字とカンマの組み合わせ
+                // 正規表現: ^(.*?)[:：]?\s*(\d[\d,]*)
+                const match = line.match(/^(.*?)[:：]?\s*(\d[\d,]*)/);
+                
+                if (match) {
+                    const label = match[1].trim(); // "最大HP" など
+                    const rawValue = match[2];    // "4,854,659" など
+
+                    // ラベルがマッピング対象か確認
+                    const inputId = mappings[label];
+                    
+                    if (inputId) {
+                        // カンマを削除して数値に変換
+                        const cleanValue = rawValue.replace(/,/g, '');
+                        
+                        // 入力欄に設定
+                        const inputEl = document.getElementById(inputId);
+                        if (inputEl) {
+                            inputEl.value = cleanValue;
+                        }
+                    }
+                }
+            });
+            
+            // 貼り付け後、自動的に計算するかどうかは好みですが、
+            // ここではユーザーが「計算する」ボタンを押すまで待つ設計にします。
+            // もし自動計算させたい場合は、以下をコメントアウト解除してください。
+            // calculateStats();
+        }
 
         // カンマ区切り用の関数
         function formatNumber(num) {
