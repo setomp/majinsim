@@ -20,6 +20,7 @@
         .stat-row:last-child { border-bottom: none; }
         .stat-label { font-weight: bold; }
         .stat-value { font-family: monospace; font-size: 1.1em; }
+        .warning-text { color: #dc2626; font-size: 0.8rem; margin-top: 4px; }
     </style>
 </head>
 <body class="p-4 md:p-8">
@@ -33,7 +34,7 @@
             <div class="grid grid-cols-2 gap-4">
                 <div class="input-group">
                     <label>騎士団レベル</label>
-                    <input type="number" id="knightLevel" value="1" min="1">
+                    <input type="number" id="knightLevel" value="19" min="1">
                 </div>
                 <div class="input-group">
                     <label>転生回数</label>
@@ -42,7 +43,7 @@
                 <!-- 計算対象のステータス -->
                 <div class="input-group">
                     <label>最大HP</label>
-                    <input type="number" id="maxHp" value="1000">
+                    <input type="number" id="maxHp" value="4854659">
                 </div>
                 <div class="input-group">
                     <label>腕力</label>
@@ -79,15 +80,28 @@
             </div>
         </div>
 
-        <!-- 2. 防具設定 -->
+        <!-- 2. 腎臓の状態 (新規追加) -->
+        <div class="card border-l-4 border-yellow-500">
+            <h2 class="text-lg font-bold mb-4 border-b pb-2">2. 腎臓の状態</h2>
+            <div class="input-group">
+                <label>状態を選択</label>
+                <select id="kidneyStatus">
+                    <option value="healthy">健康 (変化なし)</option>
+                    <option value="sold">売却済み (-50%)</option>
+                </select>
+                <div id="kidneyWarning" class="warning-text hidden">※売却済みの場合、全ステータスが50%になります。</div>
+            </div>
+        </div>
+
+        <!-- 3. 防具設定 -->
         <div class="card">
-            <h2 class="text-lg font-bold mb-4 border-b pb-2">2. 防具</h2>
+            <h2 class="text-lg font-bold mb-4 border-b pb-2">3. 防具</h2>
             <div class="grid grid-cols-2 gap-4">
                 <div class="input-group">
                     <label>防具の種類</label>
                     <select id="armorType">
                         <option value="null">なし (Null)</option>
-                        <option value="unease">ぼんやりとした不安</option>
+                        <option value="unease" selected>ぼんやりとした不安</option>
                     </select>
                 </div>
                 <div class="input-group">
@@ -99,16 +113,16 @@
             </div>
         </div>
 
-        <!-- 3. 装身具設定 -->
+        <!-- 4. 装身具設定 -->
         <div class="card">
-            <h2 class="text-lg font-bold mb-4 border-b pb-2">3. 装身具</h2>
+            <h2 class="text-lg font-bold mb-4 border-b pb-2">4. 装身具</h2>
             <div class="grid grid-cols-2 gap-4">
                 <div class="input-group">
                     <label>装身具の種類</label>
                     <select id="accessoryType">
                         <option value="null">なし (Null)</option>
                         <option value="weak_pendant">弱者のペンダント</option>
-                        <option value="blue_storm">青嵐</option>
+                        <option value="blue_storm" selected>青嵐</option>
                     </select>
                 </div>
                 <div class="input-group">
@@ -144,6 +158,21 @@
                 armorEnhanceSelect.add(option1);
                 accEnhanceSelect.add(option2);
             }
+            
+            // デフォルト値を設定（テスト用）
+            document.getElementById('armorEnhance').value = 2;
+            document.getElementById('accessoryEnhance').value = 3;
+
+            // 腎臓選択時の警告表示制御
+            const kidneySelect = document.getElementById('kidneyStatus');
+            kidneySelect.addEventListener('change', function() {
+                const warning = document.getElementById('kidneyWarning');
+                if (this.value === 'sold') {
+                    warning.classList.remove('hidden');
+                } else {
+                    warning.classList.add('hidden');
+                }
+            });
         };
 
         // カンマ区切り用の関数
@@ -156,6 +185,7 @@
             const inputs = {
                 knightLevel: parseInt(document.getElementById('knightLevel').value) || 0,
                 rebirthCount: parseInt(document.getElementById('rebirthCount').value) || 0,
+                kidneyStatus: document.getElementById('kidneyStatus').value,
                 
                 // 計算対象ステータス
                 maxHp: parseFloat(document.getElementById('maxHp').value) || 0,
@@ -196,26 +226,34 @@
                 let multiplier = 1.0;
 
                 // 1. 騎士団レベルボーナス: レベル1につき+2%
-                // 式: 1 + (レベル * 0.02)
                 multiplier *= (1 + (inputs.knightLevel * 0.02));
 
-                // 2. 防具: "ぼんやりとした不安"の場合
-                // 式: (1 + x) / (3 + x) ※ステータス減少なのでこの値を掛ける
+                // 2. 腎臓の状態
+                if (inputs.kidneyStatus === 'sold') {
+                    multiplier *= 0.5; // 50%に減少
+                }
+
+                // 3. 防具: "ぼんやりとした不安"の場合
+                // 減少率 = (1 + x) / (3 + x)
+                // 残存率 = 1 - 減少率
                 if (inputs.armorType === 'unease') {
                     const x = inputs.armorEnhance;
-                    const penalty = (1 + x) / (3 + x);
-                    multiplier *= penalty;
+                    const reductionRate = (1 + x) / (3 + x);
+                    const remainingRate = 1 - reductionRate;
+                    multiplier *= remainingRate;
                 }
 
-                // 3. 装身具: "青嵐"の場合
-                // 式: (1 + x) / (3 + x)
+                // 4. 装身具: "青嵐"の場合
+                // 減少率 = (1 + x) / (3 + x)
+                // 残存率 = 1 - 減少率
                 if (inputs.accType === 'blue_storm') {
                     const x = inputs.accEnhance;
-                    const penalty = (1 + x) / (3 + x);
-                    multiplier *= penalty;
+                    const reductionRate = (1 + x) / (3 + x);
+                    const remainingRate = 1 - reductionRate;
+                    multiplier *= remainingRate;
                 }
 
-                // 4. 装身具: "弱者のペンダント"の場合
+                // 5. 装身具: "弱者のペンダント"の場合
                 // 式: (1 + 0.1x) * (1 + 0.1n)
                 if (inputs.accType === 'weak_pendant') {
                     const x = inputs.accEnhance;
