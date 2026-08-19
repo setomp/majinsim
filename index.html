@@ -99,15 +99,14 @@
         </div>
 
         <!-- 2. 腎臓の状態 -->
-        <div class="card border-l-4 border-yellow-500">
+        <div class="card">
             <h2 class="text-lg font-bold mb-4 border-b pb-2">2. 腎臓の状態</h2>
             <div class="input-group">
                 <label>状態を選択</label>
                 <select id="kidneyStatus" class="auto-update-trigger">
-                    <option value="healthy">健康 (変化なし)</option>
-                    <option value="sold">売却済み (-50%)</option>
+                    <option value="healthy">健康</option>
+                    <option value="sold">売却済み</option>
                 </select>
-                <div id="kidneyWarning" class="warning-text hidden">※売却済みの場合、全ステータスが50%になります。</div>
             </div>
         </div>
 
@@ -167,13 +166,13 @@
     <script>
         // 初期化処理
         window.onload = function() {
-            // 騎士団レベル (1-100)
+            // 騎士団レベル (1-20)
             const knightLevelSelect = document.getElementById('knightLevel');
-            for (let i = 1; i <= 100; i++) {
+            for (let i = 1; i <= 20; i++) {
                 let opt = new Option(`レベル ${i}`, i);
                 knightLevelSelect.add(opt);
             }
-            knightLevelSelect.value = 19; // デフォルト値
+            knightLevelSelect.value = 1; // デフォルト値
 
             // 転生回数 (0-50)
             const rebirthSelect = document.getElementById('rebirthCount');
@@ -183,10 +182,10 @@
             }
             rebirthSelect.value = 0; // デフォルト値
 
-            // 強化レベル (0-16)
+            // 強化レベル (0-30)
             const armorEnhanceSelect = document.getElementById('armorEnhance');
             const accEnhanceSelect = document.getElementById('accessoryEnhance');
-            for (let i = 0; i <= 16; i++) {
+            for (let i = 0; i <= 30; i++) {
                 let option1 = new Option(`+${i}`, i);
                 let option2 = new Option(`+${i}`, i);
                 armorEnhanceSelect.add(option1);
@@ -194,8 +193,8 @@
             }
             
             // デフォルト値設定
-            document.getElementById('armorEnhance').value = 2;
-            document.getElementById('accessoryEnhance').value = 3;
+            document.getElementById('armorEnhance').value = 0;
+            document.getElementById('accessoryEnhance').value = 0;
 
             // 腎臓選択時の警告表示制御
             const kidneySelect = document.getElementById('kidneyStatus');
