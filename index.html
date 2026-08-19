@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ゲームステータスシミュレーター</title>
+    <style>
+        body { font-family: sans-serif; max-width: 600px; margin: 20px auto; padding: 0 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, select { width: 100%; padding: 8px; box-sizing: border-box; }
+        button { padding: 10px 20px; background-color: #007bff; color: white; border: none; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+        #result { margin-top: 20px; padding: 15px; background-color: #f0f0f0; border-radius: 5px; display: none; }
+    </style>
+</head>
+<body>
+
+    <h1>ステータスシミュレーター</h1>
+
+    <!-- 入力エリア -->
+    <div class="form-group">
+        <label for="baseAtk">基本攻撃力:</label>
+        <input type="number" id="baseAtk" value="100">
+    </div>
+
+    <div class="form-group">
+        <label for="baseDef">基本防御力:</label>
+        <input type="number" id="baseDef" value="50">
+    </div>
+
+    <div class="form-group">
+        <label for="equipment">装備選択:</label>
+        <select id="equipment">
+            <option value="0">なし (+0)</option>
+            <option value="10">鉄剣 (+10)</option>
+            <option value="25">鋼剣 (+25)</option>
+            <option value="50">伝説の剣 (+50)</option>
+        </select>
+    </div>
+
+    <button onclick="calculateStats()">計算する</button>
+
+    <!-- 結果表示エリア -->
+    <div id="result">
+        <h3>計算結果</h3>
+        <p>最終攻撃力: <span id="finalAtk">0</span></p>
+        <p>最終防御力: <span id="finalDef">0</span></p>
+    </div>
+
+    <script>
+        function calculateStats() {
+            // 1. 入力値を取得
+            const baseAtk = parseInt(document.getElementById('baseAtk').value) || 0;
+            const baseDef = parseInt(document.getElementById('baseDef').value) || 0;
+            const equipmentBonus = parseInt(document.getElementById('equipment').value) || 0;
+
+            // 2. 計算ロジック（例：攻撃力は装備ボーナスを加算、防御力はそのまま）
+            const finalAtk = baseAtk + equipmentBonus;
+            const finalDef = baseDef; // 防御力は装備影響なしと仮定
+
+            // 3. 結果を表示
+            document.getElementById('finalAtk').textContent = finalAtk;
+            document.getElementById('finalDef').textContent = finalDef;
+            
+            // 結果エリアを表示
+            document.getElementById('result').style.display = 'block';
+        }
+    </script>
+
+</body>
+</html>
