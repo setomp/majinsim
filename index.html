@@ -4,69 +4,225 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ゲームステータスシミュレーター</title>
+    <!-- Tailwind CSS (デザイン用) -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { font-family: sans-serif; max-width: 600px; margin: 20px auto; padding: 0 20px; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input, select { width: 100%; padding: 8px; box-sizing: border-box; }
-        button { padding: 10px 20px; background-color: #007bff; color: white; border: none; cursor: pointer; }
-        button:hover { background-color: #0056b3; }
-        #result { margin-top: 20px; padding: 15px; background-color: #f0f0f0; border-radius: 5px; display: none; }
+        body { background-color: #f3f4f6; color: #1f2937; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .input-group { margin-bottom: 10px; }
+        label { display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 4px; color: #4b5563; }
+        input, select { width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 1rem; }
+        button { width: 100%; padding: 12px; background-color: #2563eb; color: white; font-weight: bold; border-radius: 6px; cursor: pointer; transition: 0.2s; }
+        button:hover { background-color: #1d4ed8; }
+        .result-box { background-color: #ecfdf5; border: 1px solid #10b981; color: #065f46; }
     </style>
 </head>
-<body>
+<body class="p-4 md:p-8">
 
-    <h1>ステータスシミュレーター</h1>
+    <div class="max-w-2xl mx-auto">
+        <h1 class="text-2xl font-bold mb-6 text-center">ステータスシミュレーター</h1>
 
-    <!-- 入力エリア -->
-    <div class="form-group">
-        <label for="baseAtk">基本攻撃力:</label>
-        <input type="number" id="baseAtk" value="100">
-    </div>
+        <!-- 1. ベースステータス入力 -->
+        <div class="card">
+            <h2 class="text-lg font-bold mb-4 border-b pb-2">1. ベースステータス</h2>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="input-group">
+                    <label>騎士団レベル</label>
+                    <input type="number" id="knightLevel" value="1">
+                </div>
+                <div class="input-group">
+                    <label>転生回数</label>
+                    <input type="number" id="rebirthCount" value="0">
+                </div>
+                <div class="input-group">
+                    <label>最大HP</label>
+                    <input type="number" id="maxHp" value="1000">
+                </div>
+                <div class="input-group">
+                    <label>腕力</label>
+                    <input type="number" id="str" value="10">
+                </div>
+                <div class="input-group">
+                    <label>知能</label>
+                    <input type="number" id="int" value="10">
+                </div>
+                <div class="input-group">
+                    <label>生命力</label>
+                    <input type="number" id="vitality" value="10">
+                </div>
+                <div class="input-group">
+                    <label>器用さ</label>
+                    <input type="number" id="dexterity" value="10">
+                </div>
+                <div class="input-group">
+                    <label>速さ</label>
+                    <input type="number" id="speed" value="10">
+                </div>
+                <div class="input-group">
+                    <label>魅力</label>
+                    <input type="number" id="charm" value="10">
+                </div>
+                <div class="input-group">
+                    <label>魔力</label>
+                    <input type="number" id="magic" value="10">
+                </div>
+                <div class="input-group">
+                    <label>運</label>
+                    <input type="number" id="luck" value="10">
+                </div>
+            </div>
+        </div>
 
-    <div class="form-group">
-        <label for="baseDef">基本防御力:</label>
-        <input type="number" id="baseDef" value="50">
-    </div>
+        <!-- 2. 防具設定 -->
+        <div class="card">
+            <h2 class="text-lg font-bold mb-4 border-b pb-2">2. 防具</h2>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="input-group">
+                    <label>防具の種類</label>
+                    <select id="armorType">
+                        <option value="null">なし (Null)</option>
+                        <option value="unease">ぼんやりとした不安</option>
+                        <!-- 必要に応じて他の防具を追加 -->
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>強化レベル</label>
+                    <select id="armorEnhance">
+                        <!-- JavaScriptで0~16を自動生成 -->
+                    </select>
+                </div>
+            </div>
+        </div>
 
-    <div class="form-group">
-        <label for="equipment">装備選択:</label>
-        <select id="equipment">
-            <option value="0">なし (+0)</option>
-            <option value="10">鉄剣 (+10)</option>
-            <option value="25">鋼剣 (+25)</option>
-            <option value="50">伝説の剣 (+50)</option>
-        </select>
-    </div>
+        <!-- 3. 装身具設定 -->
+        <div class="card">
+            <h2 class="text-lg font-bold mb-4 border-b pb-2">3. 装身具</h2>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="input-group">
+                    <label>装身具の種類</label>
+                    <select id="accessoryType">
+                        <option value="null">なし (Null)</option>
+                        <option value="weak_pendant">弱者のペンダント</option>
+                        <option value="blue_storm">青嵐</option>
+                        <!-- 必要に応じて他の装身具を追加 -->
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>強化レベル</label>
+                    <select id="accessoryEnhance">
+                        <!-- JavaScriptで0~16を自動生成 -->
+                    </select>
+                </div>
+            </div>
+        </div>
 
-    <button onclick="calculateStats()">計算する</button>
+        <!-- 計算ボタン -->
+        <button onclick="calculateStats()">ステータスを計算する</button>
 
-    <!-- 結果表示エリア -->
-    <div id="result">
-        <h3>計算結果</h3>
-        <p>最終攻撃力: <span id="finalAtk">0</span></p>
-        <p>最終防御力: <span id="finalDef">0</span></p>
+        <!-- 結果表示 -->
+        <div id="resultArea" class="card result-box mt-6 hidden">
+            <h2 class="text-lg font-bold mb-2">計算結果</h2>
+            <div id="resultContent" class="text-sm space-y-1">
+                <!-- ここに結果が入ります -->
+            </div>
+        </div>
     </div>
 
     <script>
-        function calculateStats() {
-            // 1. 入力値を取得
-            const baseAtk = parseInt(document.getElementById('baseAtk').value) || 0;
-            const baseDef = parseInt(document.getElementById('baseDef').value) || 0;
-            const equipmentBonus = parseInt(document.getElementById('equipment').value) || 0;
-
-            // 2. 計算ロジック（例：攻撃力は装備ボーナスを加算、防御力はそのまま）
-            const finalAtk = baseAtk + equipmentBonus;
-            const finalDef = baseDef; // 防御力は装備影響なしと仮定
-
-            // 3. 結果を表示
-            document.getElementById('finalAtk').textContent = finalAtk;
-            document.getElementById('finalDef').textContent = finalDef;
+        // ページ読み込み時に強化レベルのオプション(0-16)を生成
+        window.onload = function() {
+            const armorEnhanceSelect = document.getElementById('armorEnhance');
+            const accEnhanceSelect = document.getElementById('accessoryEnhance');
             
-            // 結果エリアを表示
-            document.getElementById('result').style.display = 'block';
+            for (let i = 0; i <= 16; i++) {
+                let option1 = new Option(`+${i}`, i);
+                let option2 = new Option(`+${i}`, i);
+                armorEnhanceSelect.add(option1);
+                accEnhanceSelect.add(option2);
+            }
+        };
+
+        function calculateStats() {
+            // 1. 入力値の取得
+            const inputs = {
+                knightLevel: parseInt(document.getElementById('knightLevel').value) || 0,
+                rebirthCount: parseInt(document.getElementById('rebirthCount').value) || 0,
+                maxHp: parseInt(document.getElementById('maxHp').value) || 0,
+                str: parseInt(document.getElementById('str').value) || 0,
+                int: parseInt(document.getElementById('int').value) || 0,
+                vitality: parseInt(document.getElementById('vitality').value) || 0,
+                dexterity: parseInt(document.getElementById('dexterity').value) || 0,
+                speed: parseInt(document.getElementById('speed').value) || 0,
+                charm: parseInt(document.getElementById('charm').value) || 0,
+                magic: parseInt(document.getElementById('magic').value) || 0,
+                luck: parseInt(document.getElementById('luck').value) || 0,
+                
+                armorType: document.getElementById('armorType').value,
+                armorEnhance: parseInt(document.getElementById('armorEnhance').value),
+                
+                accType: document.getElementById('accessoryType').value,
+                accEnhance: parseInt(document.getElementById('accessoryEnhance').value)
+            };
+
+            // ---------------------------------------------------------
+            // 【ここを編集】 実際のゲームの計算ロジックを書きます
+            // ---------------------------------------------------------
+            
+            // 例：基本的なステータスに装備ボーナスを加算するだけのサンプルロジック
+            // ※ゲーム固有の数値（例：腕力1=攻撃力2など）に合わせて修正してください
+            
+            let finalHp = inputs.maxHp;
+            let finalAtk = inputs.str * 2; // 例：腕力の2倍が攻撃力
+            let finalDef = inputs.vitality * 1.5; // 例：生命力の1.5倍が防御力
+            let finalMDef = inputs.int * 1.5; // 例：知能の1.5倍が魔法防御
+
+            // 防具によるボーナス計算（サンプル）
+            if (inputs.armorType !== 'null') {
+                if (inputs.armorType === 'unease') {
+                    // 「ぼんやりとした不安」の仮効果：防御力+10、強化ごとに+1
+                    finalDef += 10 + (inputs.armorEnhance * 1);
+                }
+            }
+
+            // 装身具によるボーナス計算（サンプル）
+            if (inputs.accType !== 'null') {
+                if (inputs.accType === 'weak_pendant') {
+                    // 「弱者のペンダント」の仮効果：HP+50
+                    finalHp += 50;
+                } else if (inputs.accType === 'blue_storm') {
+                    // 「青嵐」の仮効果：速度+5
+                    inputs.speed += 5; // 速度自体の変更
+                }
+            }
+
+            // 転生によるボーナス（サンプル：転生1回ごとに全ステータスに1%ボーナスなど）
+            const rebirthBonus = 1 + (inputs.rebirthCount * 0.01);
+            finalHp *= rebirthBonus;
+            finalAtk *= rebirthBonus;
+
+            // 小数点以下切り捨て
+            finalHp = Math.floor(finalHp);
+            finalAtk = Math.floor(finalAtk);
+            finalDef = Math.floor(finalDef);
+            finalMDef = Math.floor(finalMDef);
+
+            // ---------------------------------------------------------
+            // 結果の表示
+            // ---------------------------------------------------------
+            const resultContent = document.getElementById('resultContent');
+            resultContent.innerHTML = `
+                <p><strong>騎士団レベル:</strong> ${inputs.knightLevel} (転生: ${inputs.rebirthCount})</p>
+                <hr class="my-2 border-gray-300">
+                <p><strong>最終HP:</strong> ${finalHp}</p>
+                <p><strong>最終攻撃力:</strong> ${finalAtk}</p>
+                <p><strong>最終防御力:</strong> ${finalDef}</p>
+                <p><strong>最終魔法防御:</strong> ${finalMDef}</p>
+                <p><strong>速度:</strong> ${inputs.speed}</p>
+                <p class="text-xs text-gray-500 mt-2">※計算式はサンプルです。実際のゲームの数値に合わせてJSを編集してください。</p>
+            `;
+
+            document.getElementById('resultArea').classList.remove('hidden');
         }
     </script>
-
 </body>
 </html>
