@@ -40,7 +40,7 @@
                 <label class="mb-2">ステータス一括貼り付け</label>
                 <textarea id="pasteArea" placeholder="ここにステータスログを貼り付けてください&#10;例: 最大HP: 4,854,659&#10;腕力: 2,390,873"></textarea>
                 <button class="btn-secondary" onclick="applyPaste()">貼り付けを適用する</button>
-                <p class="text-xs text-gray-500 mt-2">※貼り付け後、自動的に計算されます。</p>
+                <p class="text-xs text-gray-500 mt-2">※貼り付け適用後、自動的に計算されます。</p>
             </div>
 
             <div class="grid grid-cols-2 gap-4">
@@ -159,7 +159,7 @@
         </div>
 
         <!-- 計算ボタン (手動で再計算したい場合用) -->
-        <button onclick="calculateStats()">ステータスを再計算する</button>
+        <button onclick="calculateStats()">ステータスを再計算する（うまく動かなかった時用）</button>
 
         <!-- 結果表示 -->
         <div id="resultArea" class="card result-box mt-6 hidden">
@@ -173,13 +173,13 @@
     <script>
         // 初期化処理
         window.onload = function() {
-            // 騎士団レベル (1-100)
+            // 騎士団レベル (1-20)
             const knightLevelSelect = document.getElementById('knightLevel');
-            for (let i = 1; i <= 100; i++) {
+            for (let i = 1; i <= 20; i++) {
                 let opt = new Option(`レベル ${i}`, i);
                 knightLevelSelect.add(opt);
             }
-            knightLevelSelect.value = 19; // デフォルト値
+            knightLevelSelect.value = 1; // デフォルト値
 
             // 転生回数 (0-50)
             const rebirthSelect = document.getElementById('rebirthCount');
@@ -192,7 +192,7 @@
             // 強化レベル (0-16)
             const armorEnhanceSelect = document.getElementById('armorEnhance');
             const accEnhanceSelect = document.getElementById('accessoryEnhance');
-            for (let i = 0; i <= 16; i++) {
+            for (let i = 0; i <= 30; i++) {
                 let option1 = new Option(`+${i}`, i);
                 let option2 = new Option(`+${i}`, i);
                 armorEnhanceSelect.add(option1);
@@ -200,8 +200,8 @@
             }
             
             // デフォルト値設定
-            document.getElementById('armorEnhance').value = 2;
-            document.getElementById('accessoryEnhance').value = 3;
+            document.getElementById('armorEnhance').value = 0;
+            document.getElementById('accessoryEnhance').value = 0;
 
             // 腎臓選択時の警告表示制御
             const kidneySelect = document.getElementById('kidneyStatus');
