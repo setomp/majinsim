@@ -175,7 +175,7 @@
         window.onload = function() {
             // 騎士団レベル (1-20)
             const knightLevelSelect = document.getElementById('knightLevel');
-            for (let i = 1; i <= 20; i++) {
+            for (let i = 0; i <= 20; i++) {
                 let opt = new Option(`レベル ${i}`, i);
                 knightLevelSelect.add(opt);
             }
