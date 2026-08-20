@@ -173,13 +173,13 @@
     <script>
         // 初期化処理
         window.onload = function() {
-            // 騎士団レベル (1-20)
+            // 騎士団レベル (0-20)
             const knightLevelSelect = document.getElementById('knightLevel');
             for (let i = 0; i <= 20; i++) {
                 let opt = new Option(`レベル ${i}`, i);
                 knightLevelSelect.add(opt);
             }
-            knightLevelSelect.value = 1; // デフォルト値
+            knightLevelSelect.value = 0; // デフォルト値
 
             // 転生回数 (0-50)
             const rebirthSelect = document.getElementById('rebirthCount');
