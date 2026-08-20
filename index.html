@@ -140,6 +140,13 @@
                         <option value="null">なし (Null)</option>
                         <option value="weak_pendant">弱者のペンダント</option>
                         <option value="blue_storm">青嵐</option>
+                        <optgroup label="お守りシリーズ">
+                            <option value="copper_amulet">銅のお守り</option>
+                            <option value="iron_amulet">鉄のお守り</option>
+                            <option value="silver_amulet">銀のお守り</option>
+                            <option value="gold_amulet">金のお守り</option>
+                            <option value="platinum_amulet">プラチナのお守り</option>
+                        </optgroup>
                     </select>
                 </div>
                 <div class="input-group">
@@ -166,13 +173,13 @@
     <script>
         // 初期化処理
         window.onload = function() {
-            // 騎士団レベル (1-20)
+            // 騎士団レベル (1-100)
             const knightLevelSelect = document.getElementById('knightLevel');
-            for (let i = 1; i <= 20; i++) {
+            for (let i = 1; i <= 100; i++) {
                 let opt = new Option(`レベル ${i}`, i);
                 knightLevelSelect.add(opt);
             }
-            knightLevelSelect.value = 1; // デフォルト値
+            knightLevelSelect.value = 19; // デフォルト値
 
             // 転生回数 (0-50)
             const rebirthSelect = document.getElementById('rebirthCount');
@@ -182,10 +189,10 @@
             }
             rebirthSelect.value = 0; // デフォルト値
 
-            // 強化レベル (0-30)
+            // 強化レベル (0-16)
             const armorEnhanceSelect = document.getElementById('armorEnhance');
             const accEnhanceSelect = document.getElementById('accessoryEnhance');
-            for (let i = 0; i <= 30; i++) {
+            for (let i = 0; i <= 16; i++) {
                 let option1 = new Option(`+${i}`, i);
                 let option2 = new Option(`+${i}`, i);
                 armorEnhanceSelect.add(option1);
@@ -193,8 +200,8 @@
             }
             
             // デフォルト値設定
-            document.getElementById('armorEnhance').value = 0;
-            document.getElementById('accessoryEnhance').value = 0;
+            document.getElementById('armorEnhance').value = 2;
+            document.getElementById('accessoryEnhance').value = 3;
 
             // 腎臓選択時の警告表示制御
             const kidneySelect = document.getElementById('kidneyStatus');
@@ -208,10 +215,7 @@
             });
 
             // --- 自動更新設定 ---
-            // クラス "auto-update-trigger" を持つすべての要素を取得
             const triggers = document.querySelectorAll('.auto-update-trigger');
-            
-            // 数値入力欄 (input) には 'input' イベントを、選択式 (select) には 'change' イベントをバインド
             triggers.forEach(el => {
                 if (el.tagName === 'INPUT') {
                     el.addEventListener('input', calculateStats);
@@ -256,7 +260,6 @@
                         const inputEl = document.getElementById(inputId);
                         if (inputEl) {
                             inputEl.value = cleanValue;
-                            // 値を書き換えた後、イベントを発生させて計算を更新
                             inputEl.dispatchEvent(new Event('input'));
                         }
                     }
@@ -323,8 +326,6 @@
                 }
 
                 // 3. 防具: "ぼんやりとした不安"の場合
-                // 減少率 = (1 + x) / (3 + x)
-                // 残存率 = 1 - 減少率
                 if (inputs.armorType === 'unease') {
                     const x = inputs.armorEnhance;
                     const reductionRate = (1 + x) / (3 + x);
@@ -333,8 +334,6 @@
                 }
 
                 // 4. 装身具: "青嵐"の場合
-                // 減少率 = (1 + x) / (3 + x)
-                // 残存率 = 1 - 減少率
                 if (inputs.accType === 'blue_storm') {
                     const x = inputs.accEnhance;
                     const reductionRate = (1 + x) / (3 + x);
@@ -343,12 +342,48 @@
                 }
 
                 // 5. 装身具: "弱者のペンダント"の場合
-                // 式: (1 + 0.1x) * (1 + 0.1n)
                 if (inputs.accType === 'weak_pendant') {
                     const x = inputs.accEnhance;
                     const n = inputs.rebirthCount;
                     const bonus = (1 + 0.1 * x) * (1 + 0.1 * n);
                     multiplier *= bonus;
+                }
+
+                // 6. 装身具: お守りシリーズの場合
+                // 基本ボーナス + (強化Lv × Lvボーナス)
+                if (inputs.accType.startsWith('amulet_') || 
+                    inputs.accType.includes('amulet')) { // 念のため判定を緩く
+                    
+                    let baseBonus = 0;
+                    let lvBonus = 0;
+
+                    switch(inputs.accType) {
+                        case 'copper_amulet': // 銅
+                            baseBonus = 0.05;
+                            lvBonus = 0.05;
+                            break;
+                        case 'iron_amulet': // 鉄
+                            baseBonus = 0.10;
+                            lvBonus = 0.10;
+                            break;
+                        case 'silver_amulet': // 銀
+                            baseBonus = 0.15;
+                            lvBonus = 0.10;
+                            break;
+                        case 'gold_amulet': // 金
+                            baseBonus = 0.20;
+                            lvBonus = 0.10;
+                            break;
+                        case 'platinum_amulet': // プラチナ
+                            baseBonus = 0.25;
+                            lvBonus = 0.15;
+                            break;
+                    }
+
+                    if (baseBonus > 0) {
+                        const totalBonus = baseBonus + (inputs.accEnhance * lvBonus);
+                        multiplier *= (1 + totalBonus);
+                    }
                 }
 
                 // 最終値の算出 (小数点以下切り捨て)
