@@ -1,2 +1,2 @@
 # majinsim
-status sim
+https://setomp.github.io/majinsim/
