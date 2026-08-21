@@ -408,17 +408,22 @@
                 // --- モノクロタイマー処理 ---
                 // 通常時：倍率を掛ける
                 let finalValueCurrent = baseValue * multiplier;
-                if (isMonochrome) {
-                    finalValueCurrent *= monoMultiplier;
-                }
+                let finalValueAfter = finalValueCurrent; // デフォルトは通常時と同じ
 
-                // 5ターン目以降（減衰後）の計算
-                // 最終値から、(ベース値 × (倍率 - 1)) を引く
-                let finalValueAfter = finalValueCurrent;
-                if (isMonochrome && monoMultiplier > 1) {
-                    const increaseAmount = baseValue * (monoMultiplier - 1);
-                    finalValueAfter = finalValueCurrent - increaseAmount;
-                    if (finalValueAfter < 0) finalValueAfter = 0;
+                if (isMonochrome) {
+                    // 現在値にモノクロタイマーの倍率を適用
+                    finalValueCurrent *= monoMultiplier;
+
+                    // 5ターン目以降（減衰後）の計算
+                    // 減衰後の値 = 通常時の値 (baseValue * multiplier)
+                    // つまり、現在値から「モノクロタイマーによる増加分」を引く
+                    if (monoMultiplier > 1) {
+                        const increaseAmount = (baseValue * multiplier) * (monoMultiplier - 1);
+                        finalValueAfter = finalValueCurrent - increaseAmount;
+                    
+                        // 負の値になった場合は0に
+                        if (finalValueAfter < 0) finalValueAfter = 0;
+                    }
                 }
 
                 // --- 最終調整スライダー処理 ---
