@@ -18,12 +18,18 @@
         .btn-secondary { background-color: #6b7280; margin-top: 5px; }
         .btn-secondary:hover { background-color: #4b5563; }
         .result-box { background-color: #ecfdf5; border: 1px solid #10b981; color: #065f46; }
-        .stat-row { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #e5e7eb; }
+        .stat-row { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #e5e7eb; align-items: center; }
         .stat-row:last-child { border-bottom: none; }
-        .stat-label { font-weight: bold; }
+        .stat-label { font-weight: bold; width: 100px; }
         .stat-value { font-family: monospace; font-size: 1.1em; }
+        .stat-after { font-size: 0.8em; color: #6b7280; margin-left: 10px; }
         .warning-text { color: #dc2626; font-size: 0.8rem; margin-top: 4px; }
         textarea { height: 150px; font-family: monospace; }
+        /* スライダー用スタイル */
+        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 20px; width: 20px; border-radius: 50%; background: #2563eb; cursor: pointer; margin-top: -8px; }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: #d1d5db; border-radius: 2px; }
+        .slider-value { font-weight: bold; color: #2563eb; }
     </style>
 </head>
 <body class="p-4 md:p-8">
@@ -40,11 +46,10 @@
                 <label class="mb-2">ステータス一括貼り付け</label>
                 <textarea id="pasteArea" placeholder="ここにステータスログを貼り付けてください&#10;例: 最大HP: 4,854,659&#10;腕力: 2,390,873"></textarea>
                 <button class="btn-secondary" onclick="applyPaste()">貼り付けを適用する</button>
-                <p class="text-xs text-gray-500 mt-2">※貼り付け適用後、自動的に計算されます。</p>
+                <p class="text-xs text-gray-500 mt-2">※貼り付け後、自動的に計算されます。</p>
             </div>
 
             <div class="grid grid-cols-2 gap-4">
-                <!-- 選択式に変更 -->
                 <div class="input-group">
                     <label>騎士団レベル</label>
                     <select id="knightLevel" class="auto-update-trigger">
@@ -58,7 +63,6 @@
                     </select>
                 </div>
                 
-                <!-- 計算対象のステータス -->
                 <div class="input-group">
                     <label>最大HP</label>
                     <input type="number" id="maxHp" value="1000" class="auto-update-trigger">
@@ -99,14 +103,15 @@
         </div>
 
         <!-- 2. 腎臓の状態 -->
-        <div class="card">
+        <div class="card border-l-4 border-yellow-500">
             <h2 class="text-lg font-bold mb-4 border-b pb-2">2. 腎臓の状態</h2>
             <div class="input-group">
                 <label>状態を選択</label>
                 <select id="kidneyStatus" class="auto-update-trigger">
-                    <option value="healthy">健康</option>
-                    <option value="sold">売却済み</option>
+                    <option value="healthy">健康 (変化なし)</option>
+                    <option value="sold">売却済み (-50%)</option>
                 </select>
+                <div id="kidneyWarning" class="warning-text hidden">※売却済みの場合、全ステータスが50%になります。</div>
             </div>
         </div>
 
@@ -119,12 +124,13 @@
                     <select id="armorType" class="auto-update-trigger">
                         <option value="null">なし (Null)</option>
                         <option value="unease">ぼんやりとした不安</option>
+                        <option value="monochrome_timer">モノクロタイマー</option>
                     </select>
                 </div>
                 <div class="input-group">
                     <label>強化レベル</label>
                     <select id="armorEnhance" class="auto-update-trigger">
-                        <!-- JavaScriptで0~16を自動生成 -->
+                        <!-- JavaScriptで0~8を自動生成 (タイマー用) -->
                     </select>
                 </div>
             </div>
@@ -141,11 +147,11 @@
                         <option value="weak_pendant">弱者のペンダント</option>
                         <option value="blue_storm">青嵐</option>
                         <optgroup label="お守りシリーズ">
-                            <option value="copper_amulet">銅のお守り</option>
-                            <option value="iron_amulet">鉄のお守り</option>
-                            <option value="silver_amulet">銀のお守り</option>
-                            <option value="gold_amulet">金のお守り</option>
-                            <option value="platinum_amulet">プラチナのお守り</option>
+                            <option value="copper_amulet">銅のお守り (+5% +Lv5%)</option>
+                            <option value="iron_amulet">鉄のお守り (+10% +Lv10%)</option>
+                            <option value="silver_amulet">銀のお守り (+15% +Lv10%)</option>
+                            <option value="gold_amulet">金のお守り (+20% +Lv10%)</option>
+                            <option value="platinum_amulet">プラチナのお守り (+25% +Lv15%)</option>
                         </optgroup>
                     </select>
                 </div>
@@ -158,8 +164,19 @@
             </div>
         </div>
 
-        <!-- 計算ボタン (手動で再計算したい場合用) -->
-        <button onclick="calculateStats()">ステータスを再計算する（うまく動かなかった時用）</button>
+        <!-- 5. 最終調整スライダー -->
+        <div class="card border-l-4 border-purple-500">
+            <h2 class="text-lg font-bold mb-4 border-b pb-2">5. 最終調整</h2>
+            <div class="input-group">
+                <label>ステータス倍率調整 (<span id="sliderValueDisplay" class="slider-value">0%</span>)</label>
+                <input type="range" id="adjustSlider" min="-1000" max="1000" value="0" class="auto-update-trigger mb-2">
+                <input type="number" id="adjustInput" value="0" class="auto-update-trigger" placeholder="例: 10 (10%)">
+                <p class="text-xs text-gray-500 mt-2">※手入力の符号なしはプラス判定。最終計算結果に掛かります。</p>
+            </div>
+        </div>
+
+        <!-- 計算ボタン -->
+        <button onclick="calculateStats()">ステータスを再計算する</button>
 
         <!-- 結果表示 -->
         <div id="resultArea" class="card result-box mt-6 hidden">
@@ -173,13 +190,13 @@
     <script>
         // 初期化処理
         window.onload = function() {
-            // 騎士団レベル (0-20)
+            // 騎士団レベル (1-100)
             const knightLevelSelect = document.getElementById('knightLevel');
-            for (let i = 0; i <= 20; i++) {
+            for (let i = 1; i <= 100; i++) {
                 let opt = new Option(`レベル ${i}`, i);
                 knightLevelSelect.add(opt);
             }
-            knightLevelSelect.value = 0; // デフォルト値
+            knightLevelSelect.value = 19;
 
             // 転生回数 (0-50)
             const rebirthSelect = document.getElementById('rebirthCount');
@@ -187,20 +204,22 @@
                 let opt = new Option(`${i}回`, i);
                 rebirthSelect.add(opt);
             }
-            rebirthSelect.value = 0; // デフォルト値
+            rebirthSelect.value = 0;
 
-            // 強化レベル (0-16)
+            // 防具強化レベル (モノクロタイマー対応で0-8まで)
             const armorEnhanceSelect = document.getElementById('armorEnhance');
-            const accEnhanceSelect = document.getElementById('accessoryEnhance');
-            for (let i = 0; i <= 30; i++) {
+            for (let i = 0; i <= 8; i++) {
                 let option1 = new Option(`+${i}`, i);
-                let option2 = new Option(`+${i}`, i);
                 armorEnhanceSelect.add(option1);
+            }
+            document.getElementById('armorEnhance').value = 0;
+
+            // 装身具強化レベル (0-16)
+            const accEnhanceSelect = document.getElementById('accessoryEnhance');
+            for (let i = 0; i <= 16; i++) {
+                let option2 = new Option(`+${i}`, i);
                 accEnhanceSelect.add(option2);
             }
-            
-            // デフォルト値設定
-            document.getElementById('armorEnhance').value = 0;
             document.getElementById('accessoryEnhance').value = 0;
 
             // 腎臓選択時の警告表示制御
@@ -212,6 +231,29 @@
                 } else {
                     warning.classList.add('hidden');
                 }
+            });
+
+            // スライダーと数値入力の同期
+            const slider = document.getElementById('adjustSlider');
+            const input = document.getElementById('adjustInput');
+            const display = document.getElementById('sliderValueDisplay');
+
+            slider.addEventListener('input', function() {
+                input.value = this.value;
+                display.textContent = (this.value > 0 ? '+' : '') + this.value + '%';
+                calculateStats();
+            });
+
+            input.addEventListener('input', function() {
+                let val = parseInt(this.value);
+                if (isNaN(val)) val = 0;
+                // 範囲制限
+                if (val > 1000) val = 1000;
+                if (val < -1000) val = -1000;
+                
+                slider.value = val;
+                display.textContent = (val > 0 ? '+' : '') + val + '%';
+                calculateStats();
             });
 
             // --- 自動更新設定 ---
@@ -272,12 +314,23 @@
             return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
         }
 
+        // モノクロタイマーの倍率取得関数
+        function getMonochromeMultiplier(level) {
+            if (level === 0 || level === 1) return 2;
+            if (level === 2 || level === 3) return 3;
+            if (level === 4 || level === 5) return 4;
+            if (level === 6 || level === 7) return 5;
+            if (level === 8) return 6;
+            return 1; // デフォルト
+        }
+
         function calculateStats() {
             // 1. 入力値の取得
             const inputs = {
                 knightLevel: parseInt(document.getElementById('knightLevel').value) || 0,
                 rebirthCount: parseInt(document.getElementById('rebirthCount').value) || 0,
                 kidneyStatus: document.getElementById('kidneyStatus').value,
+                adjustPercent: parseInt(document.getElementById('adjustSlider').value) || 0,
                 
                 // 計算対象ステータス
                 maxHp: parseFloat(document.getElementById('maxHp').value) || 0,
@@ -311,18 +364,22 @@
             ];
 
             let resultHtml = '';
+            
+            // モノクロタイマーのフラグと倍率
+            const isMonochrome = inputs.armorType === 'monochrome_timer';
+            const monoMultiplier = isMonochrome ? getMonochromeMultiplier(inputs.armorEnhance) : 1;
 
             // 各ステータスに対して計算を実行
             stats.forEach(stat => {
                 let baseValue = inputs[stat.key];
                 let multiplier = 1.0;
 
-                // 1. 騎士団レベルボーナス: レベル1につき+2%
+                // 1. 騎士団レベルボーナス
                 multiplier *= (1 + (inputs.knightLevel * 0.02));
 
                 // 2. 腎臓の状態
                 if (inputs.kidneyStatus === 'sold') {
-                    multiplier *= 0.5; // 50%に減少
+                    multiplier *= 0.5;
                 }
 
                 // 3. 防具: "ぼんやりとした不安"の場合
@@ -350,50 +407,72 @@
                 }
 
                 // 6. 装身具: お守りシリーズの場合
-                // 基本ボーナス + (強化Lv × Lvボーナス)
-                if (inputs.accType.startsWith('amulet_') || 
-                    inputs.accType.includes('amulet')) { // 念のため判定を緩く
-                    
+                if (inputs.accType.includes('amulet')) {
                     let baseBonus = 0;
                     let lvBonus = 0;
-
                     switch(inputs.accType) {
-                        case 'copper_amulet': // 銅
-                            baseBonus = 0.05;
-                            lvBonus = 0.05;
-                            break;
-                        case 'iron_amulet': // 鉄
-                            baseBonus = 0.10;
-                            lvBonus = 0.10;
-                            break;
-                        case 'silver_amulet': // 銀
-                            baseBonus = 0.15;
-                            lvBonus = 0.10;
-                            break;
-                        case 'gold_amulet': // 金
-                            baseBonus = 0.20;
-                            lvBonus = 0.10;
-                            break;
-                        case 'platinum_amulet': // プラチナ
-                            baseBonus = 0.25;
-                            lvBonus = 0.15;
-                            break;
+                        case 'copper_amulet': baseBonus = 0.05; lvBonus = 0.05; break;
+                        case 'iron_amulet': baseBonus = 0.10; lvBonus = 0.10; break;
+                        case 'silver_amulet': baseBonus = 0.15; lvBonus = 0.10; break;
+                        case 'gold_amulet': baseBonus = 0.20; lvBonus = 0.10; break;
+                        case 'platinum_amulet': baseBonus = 0.25; lvBonus = 0.15; break;
                     }
-
                     if (baseBonus > 0) {
                         const totalBonus = baseBonus + (inputs.accEnhance * lvBonus);
                         multiplier *= (1 + totalBonus);
                     }
                 }
 
-                // 最終値の算出 (小数点以下切り捨て)
-                let finalValue = Math.floor(baseValue * multiplier);
+                // --- モノクロタイマー処理 ---
+                // 通常時：倍率を掛ける
+                let finalValueCurrent = baseValue * multiplier;
+                if (isMonochrome) {
+                    finalValueCurrent *= monoMultiplier;
+                }
+
+                // 5ターン目以降（減衰後）の計算
+                // 論理：(ベース × 他バフ) + ((ベース × 他バフ) × (モノクロ倍率 - 1)) - (ベース × (モノクロ倍率 - 1))
+                // つまり、モノクロで上がった分を「ベース値」から引くのではなく、「増加分」を引く処理
+                // ご提示の例: 100万 -> 500万 (400万増) -> 弱者ペン9倍 -> 4500万 -> 減衰で400万引かれて4100万
+                // これは「増加分」がバフの影響を**受けずに**引かれるという意味ではなく、
+                // 「最終値から、(ベース値 × (モノクロ倍率-1)) を引く」という解釈が最も自然です。
+                // ただし、ご提示の例では「弱者ペンダント9倍」は「100万」に対して掛かっているのか「500万」に対して掛かっているのか？
+                // 例: 100 * 5 = 500. 500 * 9 = 4500. 4500 - (100 * 4) = 4460? 
+                // 例: 100 * 5 = 500. 100 * 9 = 900. 500 + 900 = 1400? 
+                // ご提示: "弱者のペンダント9倍=4500万なら...400万だけ引かれて残り4100万"
+                // この計算式は: (100万 * 5 * 9) - (100万 * 4) = 4500 - 400 = 4100 となります。
+                // つまり、**最終計算値から、(ベース値 × (モノクロ倍率 - 1)) を引く** というロジックです。
+
+                let finalValueAfter = finalValueCurrent;
+                if (isMonochrome && monoMultiplier > 1) {
+                    // 増加分の除去: ベース値 × (倍率 - 1)
+                    const increaseAmount = baseValue * (monoMultiplier - 1);
+                    finalValueAfter = finalValueCurrent - increaseAmount;
+                    if (finalValueAfter < 0) finalValueAfter = 0;
+                }
+
+                // --- 最終調整スライダー処理 ---
+                // 値: -1000% 〜 +1000%
+                // 倍率: 1 + (値 / 100)
+                const adjustMultiplier = 1 + (inputs.adjustPercent / 100);
                 
+                // 現在の値に調整を適用
+                finalValueCurrent = Math.floor(finalValueCurrent * adjustMultiplier);
+                finalValueAfter = Math.floor(finalValueAfter * adjustMultiplier);
+
                 // 結果HTMLの生成
+                let afterText = '';
+                if (isMonochrome) {
+                    afterText = `<span class="stat-after">(5ターン目: ${formatNumber(finalValueAfter)})</span>`;
+                }
+
                 resultHtml += `
                     <div class="stat-row">
                         <span class="stat-label">${stat.label}</span>
-                        <span class="stat-value">${formatNumber(finalValue)}</span>
+                        <div class="flex items-center">
+                            <span class="stat-value">${formatNumber(finalValueCurrent)}</span>
+                            ${afterText}
+                        </div>
                     </div>
                 `;
             });
