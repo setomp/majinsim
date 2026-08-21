@@ -202,6 +202,7 @@
             }
             rebirthSelect.value = 0;
 
+
             // 防具強化レベル (0-30)
             const armorEnhanceSelect = document.getElementById('armorEnhance');
             for (let i = 0; i <= 30; i++) {
@@ -430,6 +431,7 @@
                 let afterText = '';
                 if (isMonochrome) {
                     afterText = `<span class="stat-after">(5ターン目以降: ${formatNumber(finalValueAfter)})</span>`;
+
                 }
 
                 resultHtml += `
