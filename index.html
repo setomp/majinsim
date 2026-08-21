@@ -405,25 +405,22 @@
                     }
                 }
 
-                // --- モノクロタイマー処理 ---
-                // 通常時：倍率を掛ける
-                let finalValueCurrent = baseValue * multiplier;
-                let finalValueAfter = finalValueCurrent; // デフォルトは通常時と同じ
-
-                if (isMonochrome) {
-                    // 現在値にモノクロタイマーの倍率を適用
-                    finalValueCurrent *= monoMultiplier;
-
-                    // 5ターン目以降（減衰後）の計算
-                    // 減衰後の値 = 通常時の値 (baseValue * multiplier)
-                    // つまり、現在値から「モノクロタイマーによる増加分」を引く
-                    if (monoMultiplier > 1) {
-                        const increaseAmount = (baseValue * multiplier) * (monoMultiplier - 1);
-                        finalValueAfter = finalValueCurrent - increaseAmount;
+                // --- 計算ロジック ---
+                // 通常時のステータス（騎士団, 腎臓, 防具, 装身具 を適用）
+                let normalValue = baseValue * multiplier;
+                
+                // 現在値（モノクロタイマーを適用）
+                let finalValueCurrent = normalValue * monoMultiplier;
+                
+                // 5ターン目以降（減衰後）
+                // 現在値から「入力値 × (モノクロ倍率 - 1)」を引く
+                let finalValueAfter = finalValueCurrent;
+                if (isMonochrome && monoMultiplier > 1) {
+                    const increaseAmount = baseValue * (monoMultiplier - 1);
+                    finalValueAfter = finalValueCurrent - increaseAmount;
                     
-                        // 負の値になった場合は0に
-                        if (finalValueAfter < 0) finalValueAfter = 0;
-                    }
+                    // 負の値になった場合は0に
+                    if (finalValueAfter < 0) finalValueAfter = 0;
                 }
 
                 // --- 最終調整スライダー処理 ---
@@ -436,7 +433,6 @@
                 let afterText = '';
                 if (isMonochrome) {
                     afterText = `<span class="stat-after">(5ターン目以降: ${formatNumber(finalValueAfter)})</span>`;
-
                 }
 
                 resultHtml += `
