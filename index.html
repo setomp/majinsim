@@ -202,17 +202,18 @@
             }
             rebirthSelect.value = 0;
 
-            // 防具強化レベル (0-16)
+
+            // 防具強化レベル (0-30)
             const armorEnhanceSelect = document.getElementById('armorEnhance');
-            for (let i = 0; i <= 16; i++) {
+            for (let i = 0; i <= 30; i++) {
                 let option1 = new Option(`+${i}`, i);
                 armorEnhanceSelect.add(option1);
             }
             document.getElementById('armorEnhance').value = 0;
 
-            // 装身具強化レベル (0-16)
+            // 装身具強化レベル (0-30)
             const accEnhanceSelect = document.getElementById('accessoryEnhance');
-            for (let i = 0; i <= 16; i++) {
+            for (let i = 0; i <= 30; i++) {
                 let option2 = new Option(`+${i}`, i);
                 accEnhanceSelect.add(option2);
             }
@@ -429,7 +430,8 @@
                 // 結果HTMLの生成
                 let afterText = '';
                 if (isMonochrome) {
-                    afterText = `<span class="stat-after">(5ターン目: ${formatNumber(finalValueAfter)})</span>`;
+                    afterText = `<span class="stat-after">(5ターン目以降: ${formatNumber(finalValueAfter)})</span>`;
+
                 }
 
                 resultHtml += `
